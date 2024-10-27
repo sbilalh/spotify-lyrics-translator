@@ -1,1 +1,4 @@
-export class CreateLyricDto {}
+export class CreateLyricDto {
+  songName: string;
+  artist: string;
+}

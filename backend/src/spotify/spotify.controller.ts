@@ -1,34 +1,65 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Headers,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { SpotifyService } from './spotify.service';
-import { CreateSpotifyDto } from './dto/create-spotify.dto';
-import { UpdateSpotifyDto } from './dto/update-spotify.dto';
+import { LyricsService } from '../lyrics/lyrics.service';
 
 @Controller('spotify')
 export class SpotifyController {
-  constructor(private readonly spotifyService: SpotifyService) {}
+  constructor(
+    private readonly spotifyService: SpotifyService,
+    private readonly lyricsService: LyricsService,
+  ) {}
 
-  @Post()
-  create(@Body() createSpotifyDto: CreateSpotifyDto) {
-    return this.spotifyService.create(createSpotifyDto);
-  }
+  @Get('current-track')
+  async getCurrentTrack(@Headers('authorization') auth: string) {
+    if (!auth) {
+      throw new HttpException(
+        'No authorization token provided',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
 
-  @Get()
-  findAll() {
-    return this.spotifyService.findAll();
-  }
+    const token = auth.replace('Bearer ', '');
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.spotifyService.findOne(+id);
-  }
+    try {
+      const track = await this.spotifyService.getCurrentTrack(token);
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSpotifyDto: UpdateSpotifyDto) {
-    return this.spotifyService.update(+id, updateSpotifyDto);
-  }
+      if (!track) {
+        return {
+          isPlaying: false,
+          message: 'No track currently playing',
+        };
+      }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.spotifyService.remove(+id);
+      // Fetch lyrics for the current track
+      try {
+        const lyrics = await this.lyricsService.getLyrics(
+          track.name,
+          track.artist,
+        );
+        return {
+          ...track,
+          lyrics: lyrics.lyrics,
+        };
+      } catch (error) {
+        // If lyrics fetch fails, still return track info but with error message
+        return {
+          ...track,
+          lyrics: null,
+          lyricsError: 'Could not fetch lyrics',
+          error,
+        };
+      }
+    } catch (error) {
+      throw new HttpException(
+        error.message || 'Failed to fetch current track',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

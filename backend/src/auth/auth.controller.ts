@@ -1,5 +1,4 @@
 import { Controller, Get, Query, Res, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { Response } from 'express';
 
@@ -9,15 +8,25 @@ export class AuthController {
 
   @Get('login')
   spotifyLogin() {
-    return { url: this.authService.getAuthorizationUrl() };
+    const url = this.authService.getAuthorizationUrl();
+    console.log('Generated authorization URL:', url); // Debug log
+    return { url };
   }
 
   @Get('callback')
-  @UseGuards(AuthGuard('spotify'))
   async spotifyCallback(@Query('code') code: string, @Res() res: Response) {
-    const tokens = await this.authService.handleCallback(code);
-    // In a real-world scenario, you'd want to securely store these tokens and associate them with a user session
-    res.cookie('spotify_access_token', tokens.accessToken, { httpOnly: true });
-    res.redirect('/dashboard'); // Redirect to the frontend dashboard
+    console.log('Received callback with code:', code);
+    try {
+      const tokens = await this.authService.handleCallback(code);
+      console.log('Received tokens:', tokens);
+      return res.json({
+        message: 'Authentication successful',
+        accessToken: tokens.accessToken, // Changed from nested tokens object
+        expiresIn: tokens.expiresIn,
+      });
+    } catch (error) {
+      console.error('Auth error:', error);
+      throw error;
+    }
   }
 }

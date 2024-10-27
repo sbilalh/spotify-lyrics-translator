@@ -1,26 +1,40 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import { Injectable } from '@nestjs/common';
-import { CreateSpotifyDto } from './dto/create-spotify.dto';
-import { UpdateSpotifyDto } from './dto/update-spotify.dto';
+import { ConfigService } from '@nestjs/config';
+import SpotifyWebApi = require('spotify-web-api-node');
 
 @Injectable()
 export class SpotifyService {
-  create(createSpotifyDto: CreateSpotifyDto) {
-    return 'This action adds a new spotify';
+  private spotifyApi: SpotifyWebApi;
+
+  constructor(private configService: ConfigService) {
+    this.spotifyApi = new SpotifyWebApi({
+      clientId: this.configService.get<string>('SPOTIFY_CLIENT_ID'),
+      clientSecret: this.configService.get<string>('SPOTIFY_CLIENT_SECRET'),
+      redirectUri: this.configService.get<string>('SPOTIFY_REDIRECT_URI'),
+    });
   }
 
-  findAll() {
-    return `This action returns all spotify`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} spotify`;
-  }
-
-  update(id: number, updateSpotifyDto: UpdateSpotifyDto) {
-    return `This action updates a #${id} spotify`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} spotify`;
+  async getCurrentTrack(accessToken: string) {
+    this.spotifyApi.setAccessToken(accessToken);
+    try {
+      const response = await this.spotifyApi.getMyCurrentPlayingTrack();
+      if (response.body && response.body.item) {
+        return {
+          name: response.body.item.name,
+          artist:
+            'artists' in response.body.item
+              ? response.body.item.artists[0].name
+              : 'Podcast',
+          isPlaying: response.body.is_playing,
+          progressMs: response.body.progress_ms,
+          durationMs: response.body.item.duration_ms,
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting current track:', error);
+      throw error;
+    }
   }
 }
