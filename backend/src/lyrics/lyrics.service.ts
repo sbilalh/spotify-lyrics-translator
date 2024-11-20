@@ -1,6 +1,4 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { CreateLyricDto } from './dto/create-lyric.dto';
-import { UpdateLyricDto } from './dto/update-lyric.dto';
 
 @Injectable()
 export class LyricsService {
