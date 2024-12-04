@@ -29,21 +29,6 @@ let LyricsService = class LyricsService {
             throw new common_1.HttpException('Failed to fetch lyrics', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    create(createLyricDto) {
-        return 'This action adds a new lyric';
-    }
-    findAll() {
-        return `This action returns all lyrics`;
-    }
-    findOne(id) {
-        return `This action returns a #${id} lyric`;
-    }
-    update(id, updateLyricDto) {
-        return `This action updates a #${id} lyric`;
-    }
-    remove(id) {
-        return `This action removes a #${id} lyric`;
-    }
 };
 exports.LyricsService = LyricsService;
 exports.LyricsService = LyricsService = __decorate([

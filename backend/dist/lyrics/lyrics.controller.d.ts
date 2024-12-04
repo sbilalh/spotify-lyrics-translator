@@ -7,9 +7,9 @@ export declare class LyricsController {
     getLyrics(song: string, artist: string): Promise<{
         lyrics: any;
     }>;
-    create(createLyricDto: CreateLyricDto): string;
-    findAll(): string;
-    findOne(id: string): string;
-    update(id: string, updateLyricDto: UpdateLyricDto): string;
-    remove(id: string): string;
+    create(createLyricDto: CreateLyricDto): any;
+    findAll(): any;
+    findOne(id: string): any;
+    update(id: string, updateLyricDto: UpdateLyricDto): any;
+    remove(id: string): any;
 }
